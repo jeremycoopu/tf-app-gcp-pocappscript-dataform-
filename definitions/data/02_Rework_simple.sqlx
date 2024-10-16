@@ -1,0 +1,86 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    name: "02_Rework_simple"
+}
+
+SELECT
+  --col A
+  `Issue Key`,
+  --col B
+  `Type de ticket`,
+  --col C
+  REPLACE(`Résumé`, "'", "") AS `Résumé`,
+  --col D
+  `État`,
+  --col E
+  CASE
+    WHEN `Type de ticket` IS NULL THEN NULL
+    WHEN `Epic Name` IS NULL THEN 'Épopée à définir'
+    ELSE CONCAT('https://jira.systeme-u.com/browse/', COALESCE(`Résolu`, ''), REPLACE(`Epic Name`, "'", ""))
+  END AS `Nom de lépopée`,
+  --col F
+  `Composants`,
+  --col G
+  `Rapporteur`,
+  --col H
+  `Priorité`,
+  --col I
+  `Business value`,
+  --col J
+  FORMAT_DATE('%d/%m/%Y', 
+    CASE
+      WHEN REGEXP_CONTAINS(`Création`, r'\d{2}/\d{2}/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M')
+      THEN PARSE_DATETIME('%m/%d/%Y %I:%M:%S %p', `Création`)
+      ELSE PARSE_DATETIME('%m/%d/%Y %H:%M:%S', `Création`)
+    END
+  ) AS `Création`,
+  --col K
+  FORMAT_DATE('%d/%m/%Y', 
+    CASE
+      WHEN REGEXP_CONTAINS(`Mise à jour`, r'\d{2}/\d{2}/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M')
+      THEN PARSE_DATETIME('%m/%d/%Y %I:%M:%S %p', `Mise à jour`)
+      ELSE PARSE_DATETIME('%m/%d/%Y %H:%M:%S', `Mise à jour`)
+    END
+  ) AS `Mise à jour`,
+  --col L
+  `Responsable`,
+  --col M
+  `Sprint`,
+  --col N
+  `Étiquettes`,
+  --col O
+  COALESCE(CAST(`Story points` AS INT64), 0) AS `Story points`,
+  --col P
+  NULL AS `Estimation originale`,
+  --col Q
+  `Temps consacré` AS `Estimation originale_Minutes_`,
+  --col R
+  `Temps consacré _Minutes_` AS `Temps consacré`,
+  --col S
+  `Estimation Restante` AS `Temps consacré _Minutes_`,
+  --col T
+  `Versions affectées` AS `Estimation restante`,
+  --col U
+  `Versions corrigées` AS `Estimation restante _Minutes_`,
+  --col V
+  `Version_s_ corrigée_s_ prévue_s_` AS `Affecte la_les version_s_`,
+  --col W
+  REPLACE(`Versions corrigées`, "'", "") AS `Version_s corrigée_s`,
+  --col X
+  `Version_s_ corrigée_s_ prévue_s_`,
+  --col Y
+  `Criticité analyse`,
+  --col Z
+  `Criticité initiale`,
+  --col AA
+  `Tickets liés`,
+  --col AB
+  `WSJF`,
+  --col AC
+  `Résolu` AS `Date résolution`
+FROM
+  `tec-pocappscript-r-6lbj.JIRA_REWORK.00_data_source`
+WHERE
+  `Versions corrigées` != 'Backlog restante'
+  OR `Versions corrigées` IS NULL
