@@ -35,13 +35,7 @@ SELECT
       ELSE NULL
   END AS `Fonctionnalité`,
 
---col AI
-  CASE 
-    WHEN rework.`Création` LIKE '%/%' THEN 
-      FORMAT_DATE('%d/%m/%Y', SAFE.PARSE_DATE('%d/%m/%Y', rework.`Création`))  -- Si la date contient '/', utilise le format DD/MM/YYYY
-    ELSE 
-      FORMAT_DATE('%d-%m-%Y', SAFE.PARSE_DATE('%d-%m-%Y', rework.`Création`)) 
-  END AS `Créée le`,
+
 
 FROM 
   `tec-pocappscript-r-6lbj.JIRA_REWORK.03_rework` AS rework

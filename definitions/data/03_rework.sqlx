@@ -5,102 +5,32 @@ config {
 }
 
 SELECT
-  --col A
-  `Issue Key`,
-  --col B
-  COALESCE(mapping_type.col2, data_table.`Type de ticket`) AS `Type de ticket`,
-  --col C
-  resume,
---col D
-`État`,
+
+ 
+
   --col E
   CASE
     WHEN `Type de ticket` IS NULL THEN NULL
     WHEN `Nom de lépopée` IS NULL THEN 'Épopée à définir'
     ELSE CONCAT('https://jira.systeme-u.com/browse/', COALESCE(`Date résolution`, ''), REPLACE(`Nom de lépopée`, "'", ""))
   END AS `Nom de lépopée`,
-  --col F
-  `Composants`,
-  --col G
-  `Rapporteur`,
-  --col H
-  `Priorité`,
-  --col I
-  `Business value`,
-  --col J
-  FORMAT_DATE('%d/%m/%Y',
-    CASE
-      WHEN REGEXP_CONTAINS(`Création`, r'\d{2}/\d{2}/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M')
-      THEN PARSE_DATETIME('%m/%d/%Y %I:%M:%S %p', `Création`)
-      ELSE PARSE_DATETIME('%m/%d/%Y %H:%M:%S', `Création`)
-    END
-  ) AS `Création`,
-  --col K
-  FORMAT_DATE('%d/%m/%Y',
-    CASE
-      WHEN REGEXP_CONTAINS(`Mise à jour`, r'\d{2}/\d{2}/\d{4} \d{1,2}:\d{2}:\d{2} [AP]M')
-      THEN PARSE_DATETIME('%m/%d/%Y %I:%M:%S %p', `Mise à jour`)
-      ELSE PARSE_DATETIME('%m/%d/%Y %H:%M:%S', `Mise à jour`)
-    END
-  ) AS `Mise à jour`,
-  --col L
-  `Responsable`,
-  --col M
-  `Sprint`,
-  --col N
-  `Étiquettes`,
-  --col O
-  COALESCE(CAST(`Story points` AS INT64), 0) AS `Story points`,
-  --col P
-  `Estimation originale _Minutes_` AS `Estimation originale`,
-  --col Q
-  `Temps consacré` AS `Estimation originale_Minutes_`,
-  --col R
-  `Temps consacré _Minutes_` AS `Temps consacré`,
-  --col S
-  `Estimation Restante` AS `Temps consacré _Minutes_`,
-  --col T
-  `Affecte la_les version_s_` AS `Estimation restante`,
-  --col U
-  `Version_s corrigée_s` AS `Estimation restante _Minutes_`,
-  --col V
-  `Version_s_ corrigée_s_ prévue_s_` AS `Affecte la_les version_s_`,
-  --col W
-  REPLACE(`Version_s corrigée_s`, "'", "") AS `Version_s corrigée_s`,
-  --col X
-  `Version_s_ corrigée_s_ prévue_s_`,
-  --col Y
-  `Criticité analyse`,
-  --col Z
-  `Criticité initiale`,
-  --col AA
-  `Tickets liés`,
-  --col AC
-  COALESCE(mapping_regroupement.col2, '4-En cours Scrum team') AS `Regroupement`,
-    --col AG
-  COALESCE(mapping_dev.col2, NULL) AS `Regroupement DEV`
+
+  
+
+ 
  
 FROM
   `tec-pocappscript-r-6lbj.JIRA_REWORK.02_rework` AS data_table
 
 
 
-LEFT JOIN
-  `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_type` AS mapping_type
-ON
-  data_table.`Type de ticket` = mapping_type.col1
 
 
-LEFT JOIN 
-  `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_regroupement` AS mapping_regroupement
-ON 
-  data_table.`État` = mapping_regroupement.col1
 
 
-LEFT JOIN 
-  `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_dev` AS mapping_dev
-ON 
-  data_table.`État` = mapping_dev.col1
+
+
+
 
 
 

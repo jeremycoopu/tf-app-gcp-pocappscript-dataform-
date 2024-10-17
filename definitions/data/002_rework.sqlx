@@ -6,15 +6,34 @@ config {
 
 
 SELECT 
-  data.* EXCEPT(etat),
+  data.* EXCEPT(etat,type_de_ticket),
   COALESCE(mapping_etat.col2, etat) AS etat,
-  
+  COALESCE(mapping_regroupement.col2, '4-En cours Scrum team') AS regroupement,
+  COALESCE(mapping_type.col2, data.type_de_ticket) AS type_de_ticket,
+  COALESCE(mapping_dev.col2, NULL) AS regroupement_dev,
+  --col AI
+  CASE 
+    WHEN data.creation LIKE '%/%' THEN 
+      FORMAT_DATE('%d/%m/%Y', SAFE.PARSE_DATE('%d/%m/%Y', data.creation))  -- Si la date contient '/', utilise le format DD/MM/YYYY
+    ELSE 
+      FORMAT_DATE('%d-%m-%Y', SAFE.PARSE_DATE('%d-%m-%Y', data.creation)) 
+  END AS cree_le,
 FROM  
   ${ref('001_rework')} AS data
 LEFT JOIN
   ${jira.mapping_etat} AS mapping_etat  
 ON
   data.etat = mapping_etat.col1
-
-
+LEFT JOIN 
+  ${jira.mapping_regroupement} AS mapping_regroupement
+ON 
+  data.etat = mapping_regroupement.col1
+LEFT JOIN
+   ${jira.mapping_type} AS mapping_type
+ON
+  data.type_de_ticket = mapping_type.col1
+LEFT JOIN 
+   ${jira.mapping_dev} AS mapping_dev
+ON 
+  data.etat = mapping_dev.col1
 
