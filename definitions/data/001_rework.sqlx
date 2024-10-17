@@ -1,0 +1,45 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    tags: ["jira"],
+}
+
+SELECT
+  `Issue Key` AS issue_key,          
+  `Type de ticket` AS type_de_ticket, 
+   REPLACE(`Résumé`, "'", "") AS `resume`,               
+  `État` AS etat,
+  `Epic Name` AS nom_epopee,        
+  `Composants` AS composants,         
+  `Rapporteur`,
+  `Priorité`,
+  `Business value`,
+  `Création`,
+  `Mise à jour`, 
+  `Responsable`,
+  `Sprint`,
+  `Étiquettes`,
+  COALESCE(CAST(`Story points` AS INT64), 0) AS `Story points`,
+  NULL AS `Estimation originale`, 
+  `Temps consacré`,
+  `Temps consacré _Minutes_`,
+  `Estimation Restante`,
+  `Versions affectées` AS `Affecte la_les version_s_`,
+  `Versions corrigées` AS `Version_s corrigée_s`,
+  `Version_s_ corrigée_s_ prévue_s_`, 
+  `Criticité analyse`,
+  `Criticité initiale`,
+  `Tickets liés`, 
+  `Résolution`,
+  `Epic Link` AS `Lien dépopée`, 
+  `WSJF`,
+  `Résolu` AS `Date résolution`,
+  NULL AS `Estimation_originale`,
+  NULL AS `Estimation originale _Minutes_`,
+  
+FROM  
+  ${jira.data_source}
+
+WHERE
+  `Versions corrigées` != 'Backlog restante' OR `Versions corrigées` IS NULL
+

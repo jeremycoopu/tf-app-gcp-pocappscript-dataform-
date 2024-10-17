@@ -1,0 +1,20 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    tags: ["jira"],
+}
+
+
+SELECT 
+  data.* EXCEPT(etat),
+  COALESCE(mapping_etat.col2, etat) AS etat,
+  
+FROM  
+  ${ref('001_rework')} AS data
+LEFT JOIN
+  ${jira.mapping_etat} AS mapping_etat  
+ON
+  data.etat = mapping_etat.col1
+
+
+

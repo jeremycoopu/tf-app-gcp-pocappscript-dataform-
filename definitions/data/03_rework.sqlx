@@ -10,7 +10,7 @@ SELECT
   --col B
   COALESCE(mapping_type.col2, data_table.`Type de ticket`) AS `Type de ticket`,
   --col C
-  REPLACE(`Résumé`, "'", "") AS `Résumé`,
+  resume,
 --col D
 `État`,
   --col E
@@ -82,16 +82,26 @@ SELECT
  
 FROM
   `tec-pocappscript-r-6lbj.JIRA_REWORK.02_rework` AS data_table
+
+
+
 LEFT JOIN
   `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_type` AS mapping_type
 ON
   data_table.`Type de ticket` = mapping_type.col1
 
+
 LEFT JOIN 
   `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_regroupement` AS mapping_regroupement
 ON 
   data_table.`État` = mapping_regroupement.col1
+
+
 LEFT JOIN 
   `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_dev` AS mapping_dev
 ON 
   data_table.`État` = mapping_dev.col1
+
+
+
+  
