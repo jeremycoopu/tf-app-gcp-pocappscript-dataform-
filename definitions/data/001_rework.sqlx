@@ -45,7 +45,7 @@ SELECT
   `Criticité initiale` AS criticite_initiale,
   `Tickets liés` AS tickets_lies,
   `Epic Link`AS epopee_epic,
-  
+   
   
 FROM  
   ${jira.data_source}
