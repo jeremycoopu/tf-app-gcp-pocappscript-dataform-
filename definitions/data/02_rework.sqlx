@@ -1,0 +1,78 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    name: "02_rework"
+}
+
+SELECT
+  --col A
+  `Issue Key`,
+  --col B
+  `Type de ticket`,
+  --col C
+`Résumé`,
+  --col D
+  COALESCE(mapping_etat.col2, data_table.`État`) AS `État`,
+  --col E
+  `Epic Name` AS `Nom de lépopée`,
+  --col F
+  `Composants`,
+  --col G
+  `Rapporteur`,
+  --col H
+  `Priorité`,
+  --col I
+  `Business value`,
+  --col J
+ `Création`,
+  --col K
+`Mise à jour`,
+  --col L
+  `Responsable`,
+  --col M
+  `Sprint`,
+  --col N
+  `Étiquettes`,
+  --col O
+  COALESCE(CAST(`Story points` AS INT64), 0) AS `Story points`,
+  --col P
+  NULL AS `Estimation originale`,
+  --col Q
+  `Temps consacré` ,
+  --col R
+  `Temps consacré _Minutes_` ,
+  --col S
+  `Estimation Restante`,
+  --col T
+  `Versions affectées` AS `Affecte la_les version_s_`,
+  --col U
+  `Versions corrigées` AS `Version_s corrigée_s`,
+  --col V
+  `Version_s_ corrigée_s_ prévue_s_` ,
+    --col W
+`Criticité analyse`,
+  --col X
+`Criticité initiale`,
+  --col Y
+  `Tickets liés`,
+  --col Z
+  `Résolution`,
+  --col AA
+  `Epic Link` AS `Lien dépopée`,
+  --col AB
+  `WSJF`,
+  --col AC
+  `Résolu` AS `Date résolution`,
+  --col AD
+  NULL AS `Estimation_originale`,
+   --col AE
+  NULL AS `Estimation originale _Minutes_`,
+FROM
+  `tec-pocappscript-r-6lbj.JIRA_REWORK.00_data_source` AS data_table
+LEFT JOIN
+  `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_etat` AS mapping_etat
+ON
+  data_table.`État` = mapping_etat.`col1`
+WHERE
+  `Versions corrigées` != 'Backlog restante'
+  OR `Versions corrigées` IS NULL

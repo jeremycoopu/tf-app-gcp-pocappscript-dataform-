@@ -1,0 +1,53 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    name: "04_rework"
+}
+
+SELECT 
+  rework.*,
+
+  --col AB
+  CASE 
+    WHEN rework.`Type de ticket` IS NULL THEN NULL
+    WHEN rework.`Regroupement` = '5-Terminée' THEN 
+      CASE 
+        WHEN data.`Résolution` IS NULL THEN 'Fini'
+        ELSE COALESCE(mp.col2, data.`Résolution`)
+      END
+    ELSE 'Non résolu'
+  END AS `Résolution`,
+
+  --col AD
+  CASE 
+    WHEN rework.`Issue Key` IS NULL THEN NULL
+      WHEN LEFT(rework.`Type de ticket`, 5) = "Récit" THEN
+          CASE
+            -- Vérification si la chaîne "enfant de" est présente dans la colonne AA
+            WHEN STRPOS(rework.`Tickets liés`, 'enfant de') = 0 THEN 'Sans fonctionnalité'
+            ELSE 
+              -- Extraction du texte après "enfant de"
+              SUBSTR(rework.`Tickets liés`, 
+                     STRPOS(rework.`Tickets liés`, 'enfant de') + LENGTH('enfant de '), 
+                     GREATEST(IFNULL(NULLIF(STRPOS(rework.`Tickets liés`, ','), 0) - STRPOS(rework.`Tickets liés`, 'enfant de') - LENGTH('enfant de '), 20), 0)
+              )
+          END
+      ELSE NULL
+  END AS `Fonctionnalité`,
+
+--col AI
+  CASE 
+    WHEN rework.`Création` LIKE '%/%' THEN 
+      FORMAT_DATE('%d/%m/%Y', SAFE.PARSE_DATE('%d/%m/%Y', rework.`Création`))  -- Si la date contient '/', utilise le format DD/MM/YYYY
+    ELSE 
+      FORMAT_DATE('%d-%m-%Y', SAFE.PARSE_DATE('%d-%m-%Y', rework.`Création`)) 
+  END AS `Créée le`,
+
+FROM 
+  `tec-pocappscript-r-6lbj.JIRA_REWORK.03_rework` AS rework
+LEFT JOIN 
+  `tec-pocappscript-r-6lbj.JIRA_REWORK.02_rework` AS data 
+  ON rework.`Issue Key` = data.`Issue Key`
+LEFT JOIN
+ `tec-pocappscript-r-6lbj.JIRA_REWORK.00_mapping_resolution` AS mp
+  ON data.`Résolution` = mp.col1

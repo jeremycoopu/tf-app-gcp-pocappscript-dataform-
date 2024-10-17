@@ -1,0 +1,24 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    name: "05_rework"
+}
+SELECT 
+  rework.*,
+  --Col AF
+ `Résolution`AS `WSJF`,
+ --Col AH
+  CASE 
+    WHEN rework.`Résolution` IS NULL OR rework.`Résolution` = '' THEN NULL  
+    WHEN AB = 'Non résolu' THEN 'Ouverte'   
+    ELSE 'Fermée'                           
+  END AS `Est Fermée`,
+--Col 
+
+
+FROM 
+  `tec-pocappscript-r-6lbj.JIRA_REWORK.04_rework`
+LEFT JOIN 
+  `tec-pocappscript-r-6lbj.JIRA_REWORK.00_calendrier` AS Calendrier 
+  ON Calendrier.`Date` = rework.`Créée le`  
+
