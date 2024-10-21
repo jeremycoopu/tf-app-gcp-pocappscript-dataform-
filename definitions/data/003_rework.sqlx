@@ -1,0 +1,119 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    tags: ["jira"],
+}
+
+SELECT
+  data.*  ,
+  COALESCE(mapping_regroupement.col2, '4-En cours Scrum team') AS regroupement,
+  COALESCE(mapping_dev.col2, NULL) AS regroupement_dev,
+
+
+ CASE
+    WHEN date_mise_a_jour IS NULL THEN NULL
+    WHEN IFNULL(STRPOS(date_mise_a_jour, '/'), 0) = 0 THEN '2022-12-25'
+      ELSE
+      FORMAT_TIMESTAMP(
+        "%Y-%m-%d %H.%M",
+        PARSE_TIMESTAMP('%d/%m/%Y', date_mise_a_jour)
+      )
+  END AS date_mise_a_jour_txt,
+  
+  CASE 
+    WHEN issue_key IS NULL THEN NULL  
+    WHEN IFNULL(STRPOS(tickets_lies, 'est une anomalie rencontrée sur'), 0) = 0 THEN NULL
+    ELSE 
+      TRIM(
+        REGEXP_EXTRACT(
+          tickets_lies, 
+          r"est une anomalie rencontrée sur ([^,]+)"
+        )
+      )
+  END AS recit_lie_a_anomalie,
+
+ CASE
+  WHEN issue_key IS NULL THEN NULL
+  WHEN (
+    LENGTH(LOWER(tickets_lies)) - LENGTH(REPLACE(LOWER(tickets_lies), LOWER('est une anomalie rencontrée sur'), ''))
+  ) / LENGTH('est une anomalie rencontrée sur') > 1 THEN TRUE
+  ELSE NULL
+END AS plus_un_recit_lie_a_anomalie,
+
+  CASE
+    WHEN issue_key IS NULL THEN NULL
+    WHEN IFNULL(STRPOS(etiquettes, 'DESIGN_SYSTEM'), 0) = 0 THEN NULL
+    ELSE 'X'
+  END AS est_design_system,
+
+  CASE
+    WHEN issue_key IS NULL THEN NULL
+    ELSE
+      CASE
+          WHEN STRPOS(version_corrigee, 'Release') > 0 THEN
+            SUBSTR(
+              version_corrigee,
+              STRPOS(version_corrigee, 'Release'),
+              COALESCE(NULLIF(STRPOS(version_corrigee, ',') - STRPOS(version_corrigee, 'Release'), -1), LENGTH(version_corrigee) + 1)
+            )
+          WHEN version_corrigee = '' OR version_corrigee is NUll THEN 'Release à définir'
+          ELSE version_corrigee
+      END
+  END AS release,
+
+  TRIM( 
+    CASE
+      WHEN issue_key IS NULL THEN NULL  
+      ELSE
+        CASE 
+          WHEN STRPOS(CONCAT(sprint, ' ', affecte_la_les_versions), 'Iteration') > 0 THEN
+         LPAD(
+              SUBSTR(
+                CONCAT(sprint, ' ', affecte_la_les_versions), 
+                STRPOS(CONCAT(sprint, ' ', affecte_la_les_versions), 'Iteration') + LENGTH('Iteration'), 
+                2  -- Extraire uniquement 2 caractères
+              ), 
+              2, 
+              '0'  -- Ajouter des zéros non significatifs
+            )
+          WHEN STRPOS(CONCAT(sprint, ' ', affecte_la_les_versions), 'Sprint') > 0 THEN
+              LPAD(
+              SUBSTR(
+                CONCAT(sprint, ' ', affecte_la_les_versions), 
+                STRPOS(CONCAT(sprint, ' ', affecte_la_les_versions), 'Sprint') + LENGTH('Sprint'), 
+                2 
+              ), 
+              2, 
+              '0' 
+            )
+          ELSE NULL  
+        END  
+    END  
+  ) AS sprint_1 
+
+ 
+FROM
+  ${ref('002_rework')} AS data
+ 
+  LEFT JOIN 
+  ${jira.mapping_regroupement} AS mapping_regroupement
+ON 
+  UPPER(TRIM(data.etat)) = UPPER(TRIM(mapping_regroupement.col1))
+
+LEFT JOIN 
+   ${jira.mapping_dev} AS mapping_dev
+ON 
+  UPPER(TRIM(data.etat))= UPPER(TRIM(mapping_dev.col1))
+
+
+
+
+
+
+
+
+
+
+
+
+  

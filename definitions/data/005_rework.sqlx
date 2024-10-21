@@ -1,0 +1,54 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    tags: ["jira"],
+}
+
+SELECT 
+  data.* Except(z_data), 
+   
+ CASE 
+    WHEN resolution IS NULL OR resolution = '' THEN NULL  
+    WHEN resolution = 'Non résolu' THEN 'Ouverte'   
+    ELSE 'Fermée'                           
+  END AS est_fermee,
+
+   
+ CASE
+    WHEN issue_key IS NULL THEN NULL  
+    ELSE
+      CASE
+        WHEN resolution IN ('Fini', 'Abandonnée') THEN  
+          CASE
+            WHEN sprint IS NULL THEN
+              COALESCE(calendrier2.`Itération`, 'IT00')  
+            ELSE
+              'IT' || LPAD(
+                COALESCE(
+                  CAST(REGEXP_EXTRACT(LOWER(sprint), r'\d+') AS STRING),  
+                  '00'  
+                ), 2, '0'  
+              )
+          END
+        ELSE ''  
+      END
+  END AS sprint_fermeture,
+
+  CASE 
+    WHEN type_de_ticket = 'Récit' THEN (
+      SELECT COUNT(*) 
+      FROM  ${ref('004_rework')} AS data2  
+      WHERE data2.type_de_ticket = 'Récit'
+        AND data2.fonctionnalite = data.fonctionnalite
+        AND data2.regroupement > data.regroupement
+        AND data2.priorite > data.priorite
+    )
+    ELSE NULL
+  END AS nb_us_moinsprioritaire_et_plus_avancee,
+
+FROM 
+  ${ref('004_rework')} AS data
+   LEFT JOIN
+  ${jira.calendrier} AS calendrier2
+ON SAFE.PARSE_DATE('%d/%m/%Y', SUBSTR(data.date_fermeture, 1, 10)) = calendrier2.`Date`
+order by nb_us_moinsprioritaire_et_plus_avancee desc

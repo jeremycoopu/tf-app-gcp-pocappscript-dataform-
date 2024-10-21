@@ -5,9 +5,15 @@ config {
 }
 
 SELECT
-  `Issue Key` AS issue_key,          
-   REPLACE(`Résumé`, "'", "") AS resume,               
-  `Epic Name` AS nom_epopee,        
+  `Issue Key` AS issue_key,     
+  `Type de ticket` AS   type_de_ticket,
+   REPLACE(`Résumé`, "'", "") AS resume,  
+   `État` AS etat,
+  CASE
+    WHEN `Type de ticket` IS NULL THEN NULL
+    WHEN `Epic Name` IS NULL THEN 'Épopée à définir'
+    ELSE CONCAT('https://jira.systeme-u.com/browse/', COALESCE(`Résolu`, ''), REPLACE(`Epic Name`, "'", ""))
+  END AS nom_epopee,             
   `Composants` AS composants,         
   `Rapporteur` AS rapporteur,
   `Priorité` AS priorite,
@@ -43,8 +49,29 @@ SELECT
   `Criticité initiale` AS criticite_initiale,
   `Tickets liés` AS tickets_lies,
   `WSJF`AS wsjf,
-  `Résolu` AS date_fermeture,  
+  
+CASE
+  WHEN `Résolu` IS NULL THEN NULL
+  WHEN IFNULL(STRPOS(`Résolu`, '/'), 0) = 0 THEN '2022-12-25'
+  WHEN STRPOS(`Résolu`, 'AM') > 0 OR STRPOS(`Résolu`, 'PM') > 0 THEN
+    FORMAT_TIMESTAMP(
+      "%d/%m/%Y",
+      PARSE_TIMESTAMP(
+        '%m/%d/%Y %l:%M:%S %p',
+        `Résolu`
+      )
+    )
+  ELSE
+    FORMAT_TIMESTAMP(
+       "%d/%m/%Y",
+      PARSE_TIMESTAMP(
+        '%m/%d/%Y %H:%M:%S',
+        `Résolu`
+      )
+    )
+END AS date_fermeture,
   `Epic Link`AS epopee_epic,
+  `Résolution` AS z_data   --save value of Z in sheet data to use it in column AB
    
 FROM  
   ${jira.data_source}

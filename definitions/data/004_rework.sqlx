@@ -1,0 +1,83 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    tags: ["jira"],
+}
+
+SELECT 
+data.*,
+  CASE 
+    WHEN data.type_de_ticket IS NULL THEN NULL
+    WHEN data.regroupement = '5-Terminée' THEN 
+        CASE 
+            WHEN data.z_data IS NULL THEN 'Fini'
+            ELSE COALESCE(mapping_resolution.col2, data.z_data)
+        END
+    ELSE 'Non résolu'
+  END AS resolution,
+ --col AD
+  CASE 
+    WHEN issue_key IS NULL THEN NULL
+      WHEN LEFT(type_de_ticket, 5) = "Récit" THEN
+          CASE
+            -- Vérification si la chaîne "enfant de" est présente dans la colonne AA
+            WHEN STRPOS(tickets_lies, 'enfant de') = 0 THEN 'Sans fonctionnalité'
+            ELSE 
+            -- Extraction du texte après "enfant de"
+            SUBSTR(tickets_lies, 
+       STRPOS(tickets_lies, 'enfant de') + LENGTH('enfant de '),
+       CASE 
+         WHEN STRPOS(SUBSTR(tickets_lies, STRPOS(tickets_lies, 'enfant de') + LENGTH('enfant de ')), ',') > 0
+         THEN STRPOS(SUBSTR(tickets_lies, STRPOS(tickets_lies, 'enfant de') + LENGTH('enfant de ')), ',') - 1
+         ELSE LENGTH(tickets_lies)
+       END
+)       
+          END
+      ELSE NULL
+  END AS fonctionnalite,
+
+CASE
+    WHEN LEFT(type_de_ticket, 8) = 'Anomalie' THEN calendrier1.`Itération`
+    ELSE
+      CASE
+        WHEN sprint IS NULL THEN NULL
+        ELSE
+          'IT' || LPAD(
+            CASE
+              WHEN TRIM(RIGHT(sprint, 2)) > COALESCE(sprint_1, '00') THEN TRIM(RIGHT(sprint, 2))
+              ELSE sprint_1
+            END, 2, '0')
+      END
+  END AS affecte_sprint,
+
+
+
+CASE 
+    WHEN issue_key IS NULL THEN NULL
+    WHEN LEFT(type_de_ticket, 5) = 'Récit' AND etat <> 'Fini' THEN 
+      CASE 
+        WHEN COALESCE(INSTR(SUBSTR(tickets_lies, INSTR(tickets_lies, 'enfant de ') + 1, LENGTH(tickets_lies)), 'enfant de '), 0) > 0 THEN TRUE
+        ELSE FALSE
+      END
+    ELSE FALSE
+  END AS ticket_avec_plus_dun_lien_fonctionnalite
+
+FROM
+  ${ref('003_rework')} AS data
+   LEFT JOIN 
+   ${jira.mapping_resolution} AS mapping_resolution
+ON 
+  data.z_data = mapping_resolution.col1
+  
+  LEFT JOIN
+  ${jira.calendrier} AS calendrier1
+ON SAFE.PARSE_DATE('%d/%m/%Y', SUBSTR(data.creee_le, 1, 10)) = calendrier1.`Date`
+ 
+
+
+ 
+
+
+
+
+

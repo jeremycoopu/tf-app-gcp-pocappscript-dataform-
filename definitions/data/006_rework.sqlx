@@ -1,0 +1,39 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    tags: ["jira"],
+}
+
+WITH fonctionnalites AS (
+  SELECT DISTINCT issue_key, resume
+  FROM ${ref('005_rework')}
+)
+
+SELECT 
+  data.*, 
+  CASE
+    WHEN data.fonctionnalite IS NULL THEN NULL
+    WHEN data.fonctionnalite = 'Sans fonctionnalité' THEN COALESCE(Source_Jira_Feature_Vide.H, NULL)
+    ELSE fonct.resume
+  END AS libelle_fonctionnalite,
+
+CASE
+    WHEN data.issue_key IS NULL THEN NULL
+    WHEN data.fonctionnalite = 'Sans fonctionnalité' THEN Source_Jira_Feature_Vide2.H
+    ELSE data.fonctionnalite
+  END AS id_fonctionnalite_revue
+
+FROM 
+  ${ref('005_rework')} AS data
+LEFT JOIN ${jira.source_jira_feature_vide} AS Source_Jira_Feature_Vide
+  ON REGEXP_REPLACE(data.nom_epopee, "'", "") = Source_Jira_Feature_Vide.J
+  AND data.version_corrigee = Source_Jira_Feature_Vide.AB
+
+LEFT JOIN fonctionnalites AS fonct
+  ON data.fonctionnalite = fonct.issue_key
+
+LEFT JOIN ${jira.source_jira_feature_vide} AS Source_Jira_Feature_Vide2
+  ON data.nom_epopee = Source_Jira_Feature_Vide2.`ligne_sans_fonctionnalité_depuis_les_recits`
+  AND data.version_corrigee = Source_Jira_Feature_Vide2.B
+  AND data.fonctionnalite = 'Sans fonctionnalité'
+

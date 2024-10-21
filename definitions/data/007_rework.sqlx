@@ -1,0 +1,37 @@
+config {
+    type: "table",
+    schema: "JIRA_REWORK",
+    tags: ["jira"],
+}
+
+SELECT 
+  data.*,
+   CASE
+    WHEN data.release IS NOT NULL
+     AND data.fonctionnalite != 'Sans fonctionnalité'
+     AND NOT REGEXP_CONTAINS(data.type_de_ticket, r'Anomalie')
+     AND data.id_fonctionnalite_revue IS NOT NULL
+     AND data.release !=
+     (select release from ${ref('006_rework')}
+     where issue_key=data.id_fonctionnalite_revue)
+    THEN TRUE
+    ELSE NULL
+  END AS incoherence_fonctionnalite_version, 
+
+CASE 
+    WHEN data.id_fonctionnalite_revue IS NULL OR data.id_fonctionnalite_revue = '' THEN NULL
+    WHEN data.fonctionnalite = 'Sans fonctionnalité' THEN NULL
+    WHEN data.nom_epopee != (
+      SELECT nom_epopee
+      FROM ${ref('006_rework')}
+      where issue_key=data.id_fonctionnalite_revue
+    ) THEN TRUE
+        ELSE NULL
+
+END AS incoherence_fonctionnalite_epopee
+
+  FROM   ${ref('006_rework')} AS data
+
+  
+
+  where data.issue_key="RFTULOC-1363"
